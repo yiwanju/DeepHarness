@@ -1,0 +1,88 @@
+{
+  "name": "deep-harness",
+  "version": "0.1.0",
+  "description": "DeepHarness: a desktop client shell for the DeepSeek Harness Web GUI",
+  "main": "dist/main.js",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "tsc -w & electron .",
+    "build": "tsc",
+    "start": "npm run build && electron .",
+    "dist": "npm run build && electron-builder",
+    "smoke": "bash scripts/smoke.sh"
+  },
+  "dependencies": {
+    "@deepseek-ai/cordis-plugin-group": "^1.0.1",
+    "@deepseek-ai/dsh": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-anonymous-user-id": "^0.1.0-rc.6",
+    "@deepseek-ai/dsh-atomic-write": "^0.1.0-rc.6",
+    "@deepseek-ai/dsh-bash-local": "^0.1.0-rc.6",
+    "@deepseek-ai/dsh-code-runtime": "^0.1.0-rc.6",
+    "@deepseek-ai/dsh-compaction": "^0.1.0-rc.6",
+    "@deepseek-ai/dsh-fs": "^0.1.0-rc.6",
+    "@deepseek-ai/dsh-invariants": "^0.1.0-rc.6",
+    "@deepseek-ai/dsh-output-retention": "^0.1.0-rc.6",
+    "@deepseek-ai/dsh-sandbox": "^0.1.0-rc.6",
+    "@deepseek-ai/dsh-scope": "^0.1.0-rc.6",
+    "@deepseek-ai/dsh-session-telemetry": "^0.1.0-rc.6",
+    "@deepseek-ai/dsh-session-title-llm": "^0.1.0-rc.6",
+    "@deepseek-ai/dsh-shell": "^0.1.0-rc.6",
+    "@deepseek-ai/dsh-spill": "^0.1.0-rc.6",
+    "@deepseek-ai/dsh-subagent-in-process-driver": "^0.1.0-rc.6",
+    "@deepseek-ai/dsh-subprocess": "^0.1.0-rc.6",
+    "@deepseek-ai/dsh-timeout": "^0.1.0-rc.6",
+    "@deepseek-ai/dsh-workflow": "^0.1.0-rc.6",
+    "electron-updater": "^6.8.9"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "electron": "^43.4.0",
+    "electron-builder": "^26.15.3",
+    "typescript": "^7.0.2"
+  },
+  "build": {
+    "appId": "com.deepharness.app",
+    "productName": "DeepHarness",
+    "npmRebuild": false,
+    "asar": false,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/main.js",
+      "dist/log.js",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/client.patch.yml",
+        "to": "client.patch.yml"
+      },
+      {
+        "from": "build/node.exe",
+        "to": "node/node.exe"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis"
+        },
+        {
+          "target": "portable"
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "yiwanju",
+        "repo": "DeepHarness"
+      }
+    ]
+  }
+}

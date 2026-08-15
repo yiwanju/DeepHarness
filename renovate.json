@@ -1,0 +1,11 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "packageRules": [
+    {
+      "matchPackageNames": ["@deepseek-ai/dsh"],
+      "labels": ["deps", "dsh"],
+      "prBodyNotes": ["升级 dsh 前，先过一遍更新同步手册第 3 节的「破坏性变更检查清单」"]
+    }
+  ]
+}

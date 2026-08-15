@@ -1,0 +1,10 @@
+# 客户端定制层：随包分发，运行时 --patch 传入。
+# 规则：patch 文件顶层必须是 YAML 数组（[]），每个元素是一行（- id: ... 覆盖，或 - insert: ... 新增）。
+# 想加定制就在 [] 里追加条目，永远不碰 dsh 源码。
+#
+# 例：覆盖默认模型
+# - id: agent-default-model
+#   config:
+#     model: deepseek-chat
+
+[]
