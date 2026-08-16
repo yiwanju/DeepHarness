@@ -1,5 +1,6 @@
 # DeepHarness 桌面运行与发布手册
 
+> 项目总览、功能与快速开始见 [README.md](README.md)；本文档专注打包、发布、key 机制与分享的详细操作。
 > 本文档给「在真实桌面环境（非沙箱）完成剩余步骤」的维护者使用。
 > 前提：项目已建好、依赖已装、`tsc` 编译通过（沙箱内已完成）。
 
@@ -22,7 +23,7 @@ npm.cmd start
 
 已打包产出在 `release\`：
 
-- `DeepHarness Setup 0.1.2.exe`（145MB）—— NSIS 安装版（唯一发布形态）
+- `DeepHarness Setup 0.1.4.exe`（145MB）—— NSIS 安装版（唯一发布形态）
 - `latest.yml` + `.blockmap` —— 自动更新元数据
 
 改代码后如需重新打包：`npm.cmd run dist`（下载工具慢时设 `ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/` 与 `ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/`）。
@@ -48,7 +49,7 @@ git push -u origin main
 
 ## 五、给其他设备用
 
-- 从 GitHub Releases 下载 `DeepHarness Setup 0.1.2.exe` 安装（正式分发，自动更新生效）
+- 从 GitHub Releases 下载 `DeepHarness Setup 0.1.4.exe` 安装（正式分发，自动更新生效）
 
 ## 注意
 
@@ -65,7 +66,7 @@ git push -u origin main
 
 ### 分享给「别人」的电脑（对方用自己的 key）
 
-1. 发 `DeepHarness Setup 0.1.2.exe`（安装版）。
+1. 发 `DeepHarness Setup 0.1.4.exe`（安装版）。
 2. 对方装好后，在设置里填自己的 `DEEPSEEK_API_KEY`。
 
 ### 分享给「自己」的另一台设备（想用同一个 key）
