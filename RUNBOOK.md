@@ -6,7 +6,7 @@
 ## 一、开发模式运行验证（M0 验收）
 
 ```powershell
-cd D:\deepseek-harness\DeepHarness
+cd D:\DeepHarness-src
 npm.cmd start
 ```
 
@@ -22,8 +22,7 @@ npm.cmd start
 
 已打包产出在 `release\`：
 
-- `DeepHarness Setup 0.1.0.exe`（156MB）—— NSIS 安装版
-- `DeepHarness 0.1.0.exe`（156MB）—— portable 绿色版（双击即用）
+- `DeepHarness Setup 0.1.2.exe`（145MB）—— NSIS 安装版（唯一发布形态）
 - `latest.yml` + `.blockmap` —— 自动更新元数据
 
 改代码后如需重新打包：`npm.cmd run dist`（下载工具慢时设 `ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/` 与 `ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/`）。
@@ -38,7 +37,7 @@ npx.cmd electron-builder --publish always
 ## 四、git 提交并推送到 GitHub
 
 ```powershell
-cd D:\deepseek-harness\DeepHarness
+cd D:\DeepHarness-src
 git init
 git add .
 git commit -m "M0+M1: DeepHarness Electron client"
@@ -47,10 +46,9 @@ git remote add origin https://github.com/yiwanju/DeepHarness.git
 git push -u origin main
 ```
 
-## 五、给其他设备用（两种方式，见开发文档 7.5）
+## 五、给其他设备用
 
-- **方式 A**：GitHub Releases 下载安装（正式，自动更新生效）
-- **方式 B**：直接拷贝 `DeepHarness 0.1.0.exe`（portable 单文件）
+- 从 GitHub Releases 下载 `DeepHarness Setup 0.1.2.exe` 安装（正式分发，自动更新生效）
 
 ## 注意
 
@@ -67,7 +65,7 @@ git push -u origin main
 
 ### 分享给「别人」的电脑（对方用自己的 key）
 
-1. 发 `DeepHarness Setup 0.1.0.exe`（安装版，推荐）或 `DeepHarness 0.1.0.exe`（绿色版）。
+1. 发 `DeepHarness Setup 0.1.2.exe`（安装版）。
 2. 对方装好后，在设置里填自己的 `DEEPSEEK_API_KEY`。
 
 ### 分享给「自己」的另一台设备（想用同一个 key）

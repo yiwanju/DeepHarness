@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, shell } from 'electron'
+import { app, BrowserWindow, dialog, Notification, shell } from 'electron'
 import { spawn, ChildProcess } from 'node:child_process'
 import path from 'node:path'
 import { log } from './log.js'
@@ -11,11 +11,17 @@ const MAX_RESTARTS = 3                          // 5 分钟内最多自动重启
 
 let child: ChildProcess | null = null
 let window: BrowserWindow | null = null
+let splash: BrowserWindow | null = null
+let dshStartAt = 0
+let eventsAbort: AbortController | null = null
+let readyUrl: string | null = null
+let isQuitting = false
 let restarts = 0
 let lastRestartAt = 0
 
 // 禁用 GPU 硬件加速：规避部分 Windows 显卡驱动的 Electron 崩溃（须在 ready 前调用）
 app.disableHardwareAcceleration()
+app.setAppUserModelId('com.deepharness.app')   // Windows 系统通知需要 AppUserModelID
 
 // ── 单实例锁 ─────────────────────────────────────────────
 const gotLock = app.requestSingleInstanceLock()
@@ -48,8 +54,25 @@ function resolveNodePath(): string {
   return 'node'   // 开发模式用系统 node
 }
 
+// ── 启动画面（splash）：双击立即有反馈，后台等 dsh 就绪 ──
+function showSplash(): void {
+  splash = new BrowserWindow({
+    width: 420, height: 260,
+    frame: false, resizable: false, show: false,
+    webPreferences: { nodeIntegration: false, contextIsolation: true },
+  })
+  splash.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(
+    '<html><body style="margin:0;background:#1a1a1a;color:#eee;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:system-ui,sans-serif;height:100vh;user-select:none;"><div style="font-size:26px;font-weight:600;">DeepHarness</div><div style="font-size:13px;color:#8a8a8a;margin-top:4px;">v' + app.getVersion() + '</div><div style="font-size:14px;color:#9a9a9a;margin-top:12px;">正在启动，请稍候…</div></body></html>'))
+  splash.once('ready-to-show', () => splash?.show())
+}
+
+function closeSplash(): void {
+  if (splash) { splash.close(); splash = null }
+}
+
 // ── 启动 dsh 子进程 ──────────────────────────────────────
 function startDsh(): void {
+  dshStartAt = Date.now()
   const node = resolveNodePath()
   const args = [
     resolveDshBin(),
@@ -96,20 +119,71 @@ function startDsh(): void {
 // ── 打开窗口 ─────────────────────────────────────────────
 function openWindow(url: string): void {
   if (window) return
-  log('ready: ' + url)
+  log(`ready: ${url} (dsh 启动耗时 ${Date.now() - dshStartAt}ms)`)
+  closeSplash()
   window = new BrowserWindow({
     width: 1280, height: 800,
+    title: `DeepHarness v${app.getVersion()}`,
     show: false,
     webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: true },  // D5
   })
   window.once('ready-to-show', () => window?.show())
   window.loadURL(url)
+  void watchDshEvents(url)   // 连接 dsh 事件流（审批/任务结束 → 系统通知）
   // 外链一律走系统浏览器，不在应用内开新窗口
   window.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url)
     return { action: 'deny' }
   })
   window.on('closed', () => { window = null })
+}
+
+// ── dsh 事件流（WebSocket）：审批请求 + 任务结束 → 系统通知 ──
+function watchDshEvents(url: string): void {
+  eventsAbort?.abort()
+  eventsAbort = new AbortController()
+  readyUrl = url
+  const wsUrl = url.replace(/^http/, 'ws').replace(/\/+$/, '') + '/api/events.mux'
+  let ws: WebSocket
+  try {
+    ws = new WebSocket(wsUrl)
+  } catch (e) {
+    log('events: WebSocket 创建失败 ' + String(e))
+    return
+  }
+  ws.onmessage = (ev) => {
+    if (typeof ev.data === 'string') {
+      handleEventFrame(ev.data)
+    }
+  }
+  ws.onclose = () => {
+    if (!isQuitting) {
+      setTimeout(() => { if (readyUrl && !isQuitting) void watchDshEvents(readyUrl) }, 3000)
+    }
+  }
+}
+
+function handleEventFrame(json: string): void {
+  let frame: { method?: string; payload?: { toolName?: string; reason?: string; event?: { type?: string; data?: { reason?: { kind?: string } } } } }
+  try { frame = JSON.parse(json) } catch { return }
+  const payload = frame.payload
+  if (frame.method === 'approval/requested' && payload) {
+    const tool = payload.toolName ?? '未知工具'
+    notify('DeepHarness 需要您的许可', `工具「${tool}」请求执行许可${payload.reason ? '：' + payload.reason : ''}`)
+  } else if (frame.method === 'session/event' && payload?.event?.type === 'turn/end') {
+    const kind = payload.event.data?.reason?.kind
+    const text = kind === 'completed' ? '任务已完成' : kind === 'error' ? '任务出错' : kind === 'interrupted' ? '任务已中断' : '任务已结束'
+    notify('DeepHarness', text)
+  }
+}
+
+function notify(title: string, body: string): void {
+  if (!Notification.isSupported()) return
+  const n = new Notification({ title, body })
+  n.on('click', () => {
+    if (window) { if (window.isMinimized()) window.restore(); window.focus() }
+  })
+  n.show()
 }
 
 // ── 停止子进程：SIGTERM → 等 5s → SIGKILL ────────────────
@@ -162,11 +236,14 @@ async function main(): Promise<void> {
   app.on('before-quit', (e) => {
     // 阻止默认退出，先优雅停子进程
     e.preventDefault()
+    isQuitting = true
+    eventsAbort?.abort()
     void (async () => {
       await stopChild()
       app.exit(0)
     })()
   })
+  showSplash()
   startDsh()
   // 启动后延迟 10s 检查更新（开发/无 feed 时静默忽略失败）
   setTimeout(() => { void autoUpdater.checkForUpdates().catch(() => {}) }, 10_000)

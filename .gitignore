@@ -6,4 +6,5 @@ release/
 .electron-cache/
 .electron-builder-cache/
 .smoke-home/
+.diag-home/
 *.log

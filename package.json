@@ -1,6 +1,6 @@
 {
   "name": "deep-harness",
-  "version": "0.1.0",
+  "version": "0.1.4",
   "description": "DeepHarness: a desktop client shell for the DeepSeek Harness Web GUI",
   "main": "dist/main.js",
   "type": "commonjs",
@@ -51,7 +51,12 @@
     "files": [
       "dist/main.js",
       "dist/log.js",
-      "package.json"
+      "package.json",
+      "!node_modules/**/*.map",
+      "!node_modules/**/*.ts",
+      "!node_modules/**/*.mts",
+      "!node_modules/**/*.cts",
+      "!node_modules/**/*.md"
     ],
     "extraResources": [
       {
@@ -64,12 +69,10 @@
       }
     ],
     "win": {
+      "icon": "resources/icon.png",
       "target": [
         {
           "target": "nsis"
-        },
-        {
-          "target": "portable"
         }
       ]
     },
@@ -81,7 +84,7 @@
       {
         "provider": "github",
         "owner": "yiwanju",
-        "repo": "DeepHarness"
+        "repo": "DeepHarness-Releases"
       }
     ]
   }
